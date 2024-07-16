@@ -1,6 +1,9 @@
 const fs = require("fs")
 const http = require("http")
 const url = require("url")
+
+const slugify = require("slugify")
+
 const replaceTemplate = require("./modules/replaceTemplate")
 
 // Blocking, synchronous
@@ -16,12 +19,18 @@ fs.readFile('./txt/start.txt', 'utf-8', (err, data) => {
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8") // __dirname is a built in variable for the root drectory
 const dataObj = JSON.parse(data) //JSON.parse creates a new JS object with JSON as a parameter
 
+const slugs = dataObj.map(el => slugify(el.productName, {lower: true}))
+
 const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, "utf-8")
 const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, "utf-8")
 const tempProd = fs.readFileSync(`${__dirname}/templates/template-product.html`, "utf-8")
 
 const server = http.createServer( (req, res) => {
-    const { query, pathname } = url.parse(req.url, true)
+    // req, res are parameters but do not need to be passed because this callback function is a parameter itself
+    // When the "server" object is created, the callback function (request listener) is passed as a parameter
+    // then called automatically every time an HTTP request is made
+
+    const { query, pathname } = url.parse(req.url, true) // true is an optional param used to convert the "query" return variable from string to an object
     // Same as doing these two lines below
     // const pathName = url.parse(req.url, true).pathname
     // const query = url.parse(req.url, true).query
@@ -29,7 +38,7 @@ const server = http.createServer( (req, res) => {
     //Overview
     if (pathname === '/' || pathname === '/overview') {
         res.writeHead(200, {"Content-type": "text/html"})
-        const cardsHTML = dataObj.map(el => replaceTemplate(tempCard, el)).join("")
+        const cardsHTML = dataObj.map(dataObjElement => replaceTemplate(tempCard, dataObjElement)).join("")
         // Loop through data.json
         // Call replaceTemplate, looping through indexes of data.json
         // At each iteration of the loop, replace values in template-card with correspoding values from data.json
